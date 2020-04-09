@@ -33,4 +33,6 @@ View(coronavirus)
 
 ###Análisis
 
+
+###Hola
 str(coronavirus)
