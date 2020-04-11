@@ -37,4 +37,5 @@ View(coronavirus)
 ###Hola
 #funcionaporfavor
 #commit19
+#funcionadenuevo
 str(coronavirus)
