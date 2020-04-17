@@ -1,0 +1,9 @@
+
+LinkPage='https://es.statista.com/estadisticas/1110077/numero-casos-muertes-covid-19-peru/'
+LinkPath='//*[@id="highcharts-iuzuajq-0"]/svg/rect[1]'
+install.packages("htmltab")
+library(htmltab)
+peru=htmltab(doc=LinkPage,
+             wich=LinkPath) 
+
+
