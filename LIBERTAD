@@ -1,0 +1,22 @@
+# 123
+
+```{r}
+install.packages("rio")
+library(rio)
+```
+```{r}
+LinkPage="https://en.wikipedia.org/wiki/Freedom_in_the_World"
+LinkPath='//*[@id="mw-content-text"]/div/table[1]'
+```
+```{r}
+install.packages("htmltab")
+library(htmltab)
+```
+```{r}
+LIBERTAD=htmltab(doc = LinkPage,
+                 which = LinkPath)
+```
+
+
+
+
