@@ -1,0 +1,117 @@
+####Problema 1####
+library(htmltab)
+library(tidyr)
+library(stringr)
+library(magrittr)
+
+url3 = "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/274.html"
+
+cdio = htmltab(doc = url3, 
+               which ='//*[@id="fieldListing"]', #herramientas de desarrollador
+               encoding = "UTF-8")
+
+names(cdio)
+names(cdio) = c("Pais", "co2")
+
+cdio=separate(cdio,co2,into=c("co2",'delete'), "\\(")[,-3]
+cdio$delete=NULL #borramos delete
+
+head(cdio) #resultado
+
+cdio=separate(cdio,co2,into=c("co2",'xtra1','xtra2'), " ")
+
+#Quiero ver NA's
+table(cdio$xtra1,useNA ='always') #quiero ver los NAs
+table(cdio$xtra2,useNA ='always') #quiero ver los NAs
+
+#Eliminando extra2
+cdio$xtra2=NULL
+
+#Recodificamos
+cdio$xtra1=recode(cdio$xtra1,billion=10^9,million=10^6,Mt=1) #recodificamos
+table(cdio$xtra1,useNA ='always') #vemos resultado del cambio
+
+cdio$co2 =gsub(",", "", cdio$co2) #Eliminar caracteres especiales
+cdio$co2=as.numeric(cdio$co2) #convertimos a numérico 
+
+#Estandarizando
+cdio$co2=(cdio$co2*cdio$xtra1)/(10^6) #a millones
+head(cdio$co2,10) #resultado
+
+summary(cdio)
+cdio$xtra1=NULL
+head(cdio) #Resultado final
+
+####Problema 2####
+demolink = "https://en.wikipedia.org/wiki/Democracy_Index"
+demopath = '//*[@id="mw-content-text"]/div/table[2]/tbody'
+demo = htmltab(doc = demolink, which =demopath)
+
+View(demo)
+
+#limpieza solo de nombres. Camino lógico
+
+names(demo)=str_split(names(demo),">>",simplify = T)[,1]%>%gsub('\\s','',.)
+names(demo)
+
+#elimnando columnas raras
+
+demo=demo[,-c(1,11)] #sin Rank ni changes
+names(demo)
+
+demo[,-c(1,8,9)]=lapply(demo[,-c(1,8,9)], trimws,whitespace = "[\\h\\v]") # no blanks
+
+demo[,-c(1,8,9)]=lapply(demo[,-c(1,8,9)], as.numeric) # a numerico
+
+#Listo!
+str(demo)
+
+####Problema 3####
+library(htmltab)
+
+url1 = "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html" 
+
+gdp = htmltab(doc = url1, 
+              which ='//*[@id="rankOrder"]', #herramientas de desarrollador
+              encoding = "UTF-8") 
+
+names(gdp)
+
+#Solo se necesitan las columas 2 y 3
+gdp = gdp[,c(2,3)]
+names(gdp) = c("Pais", "PBI")
+
+names(gdp)
+
+#Limpieza
+gdp$PBI =   gsub("\\$|\\,", "", gdp$PBI) #| es "o" 
+
+head(gdp$PBI,20) #Resultado
+
+#Convirtiendo a numérica
+gdp$PBI = as.numeric(gdp$PBI)
+
+summary(gdp)
+str(gdp)
+
+#LISTO
+
+####Problema 4####
+library(htmltab)
+link ="https://en.wikipedia.org/wiki/List_of_freedom_indices"
+linkPath ='//*[@id="mw-content-text"]/div/table[2]'
+freedom = htmltab(doc =link, which = linkPath)
+
+names(freedom)
+
+str(freedom)
+View(freedom)
+#Dejando los datos como categóricos y solo cambiando los NA
+freedom[2:5]= replace(freedom[2:5], freedom[2:5] == "n/a",NA)
+
+View(freedom)
+
+#Modificando los valores a numéricos
+sub1=freedom[2:5]
+
+sub1=replace(sub1, sub1 == "free",1)
