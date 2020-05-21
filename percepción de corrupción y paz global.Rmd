@@ -1,0 +1,52 @@
+
+```{r}
+install.packages('htmltab')
+library(htmltab)
+```
+```{r}
+install.packages('rio')
+library(rio)
+```
+```{r}
+lkpagecorr='https://en.wikipedia.org/wiki/Corruption_Perceptions_Index'
+lkpathcorr='//*[@id="mw-content-text"]/div/table[3]'
+```
+```{r}
+corrupcion=htmltab(doc=lkpagecorr,which = lkpathcorr)
+```
+```{r}
+corrupcion[c(1,4:17)]=NULL
+```
+```{r}
+corrupcion$`2019 >> Score`=as.numeric(corrupcion$`2019 >> Score`)
+```
+```{r}
+str(corrupcion)
+```
+```{r}
+lkpageestpol='https://en.wikipedia.org/wiki/Global_Peace_Index'
+lkpathestpol='//*[@id="mw-content-text"]/div/table[2]/tbody'
+```
+```{r}
+estabilidad=htmltab(doc=lkpageestpol,which = lkpathestpol)
+```
+```{r}
+estabilidad[c(2,4:25)]=NULL
+```
+```{r}
+estabilidad$`2019 score`=as.numeric(estabilidad$`2019 score`)
+```
+```{r}
+str(estabilidad)
+```
+```{r}
+names(estabilidad)=c('Country','paz global')
+```
+```{r}
+names(corrupcion)=c('Country','percepción de corrupción')
+```
+```{r}
+correst=merge(corrupcion,estabilidad)
+```
+
+
