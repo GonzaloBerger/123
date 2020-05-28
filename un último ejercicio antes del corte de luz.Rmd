@@ -1,0 +1,145 @@
+
+# descargar e instalar las librerías que vamos a usar
+```{r}
+install.packages("htmltab")
+library(htmltab)
+```
+```{r}
+install.packages('cluster')
+library(cluster)
+```
+```{r}
+install.packages('plyr')
+library(plyr)			
+```
+```{r}
+install.packages('knitr')
+library(knitr)
+```
+```{r}
+install.packages('kableExtra')
+library(kableExtra)
+```
+```{r}
+install.packages('factoextra')
+library(factoextra)
+```
+```{r}
+install.packages('ggrepel')
+library(ggrepel)
+```
+# scraping'
+```{r}
+lkpage='https://en.wikipedia.org/wiki/World_Happiness_Report'
+lkpath='//*[@id="mw-content-text"]/div/table'
+```
+```{r}
+felicidad=htmltab(doc=lkpage,which =lkpath)
+```
+# eliminar las columnas que no vamos a usar
+```{r}
+felicidad[c(1,3)]=NULL
+```
+# eliminar los espacios en blanco antes y después del texto en la primera columna
+```{r}
+felicidad$`Country or region`=trimws(felicidad$`Country or region`,whitespace="[\\h\\v]")
+```
+# observar la estructura
+```{r}
+str(felicidad)
+```
+
+# cambiar a numérico las variables excepto 'Country or Region'
+```{r}
+felicidad[,-c(1)]=lapply(felicidad[,-c(1)],as.numeric)
+```
+# observar la estructura luego de haber hecho el cambio
+```{r}
+str(felicidad)
+```
+
+# ejecutar el comando para que los nombres aparezcan en las gráficas
+```{r}
+row.names(felicidad)=felicidad$`Country or region`
+```
+# ver si hay filas incompletas
+```{r}
+felicidad[!complete.cases(felicidad),]
+```
+# vemos que no hay filas incompletas 
+
+# calcular distancias
+```{r}
+g.dist=daisy(felicidad[,c(2:7)],metric = 'gower')
+```
+# proponer la cantidad de conglomerados
+```{r}
+pam.resultado=pam(g.dist,3,cluster.only = F)
+```
+# crear una columna que nos permita ver qué casos pertenecen a qué conglomerado
+```{r}
+felicidad$clusterPT=pam.resultado$cluster
+```
+# exportar resultados
+# ver el resultado preliminar
+```{r}
+aggregate(as.matrix(cbind(felicidad[,c(2:7)]))~ clusterPT, data=felicidad, FUN=plyr::each(MD = median, Media = mean))
+```
+# guardar el resultado anterior en un objeto
+```{r}
+agg=aggregate(as.matrix(cbind(felicidad[,c(2:7)]))~ clusterPT, data=felicidad, FUN=plyr::each(MD = median, Media = mean))
+```
+# convertir la tabla resumen en un data frame
+```{r}
+tablaResumen=t(as.data.frame(agg))
+```
+# mejorar la presentación de la tabla
+```{r}
+kable(tablaResumen, format = "html", digits = 2)%>%
+  
+kable_styling()
+```
+
+# visualizar los conglomerados
+```{r}
+fviz_cluster(object = list(data=g.dist, cluster = felicidad$clusterPT), geom = c('text'), ellipse.type = 'convex')
+```
+
+```{r}
+fviz_cluster(object = list(data=g.dist, cluster = felicidad$clusterPT), geom = c('text'), ellipse = FALSE, labelsize = 5, repel = T)
+```
+
+# ahora vamos a proponer 5 conglomerados 
+```{r}
+pam.resultado=pam(g.dist,5,cluster.only = F)
+```
+# crear una columna que nos permita ver qué casos pertenecen a qué conglomerado
+```{r}
+felicidad$clusterPT2=pam.resultado$cluster
+```
+# exportar resultados
+# ver el resultado preliminar
+```{r}
+aggregate(as.matrix(cbind(felicidad[,c(2:7)]))~ clusterPT2, data=felicidad, FUN=plyr::each(MD = median, Media = mean))
+```
+# guardar el resultado anterior en un objeto
+```{r}
+agg2=aggregate(as.matrix(cbind(felicidad[,c(2:7)]))~ clusterPT2, data=felicidad, FUN=plyr::each(MD = median, Media = mean))
+```
+# convertir la tabla resumen en un data frame
+```{r}
+tablaResumen2=t(as.data.frame(agg2))
+```
+# mejorar la presentación de la tabla
+```{r}
+kable(tablaResumen2, format = "html", digits = 2)%>%
+  
+kable_styling()
+```
+# visualizar los conglomerados
+```{r}
+fviz_cluster(object = list(data=g.dist, cluster = felicidad$clusterPT2), geom = c('text'), ellipse.type = 'convex')
+```
+```{r}
+fviz_cluster(object = list(data=g.dist, cluster = felicidad$clusterPT2), geom = c('text'), ellipse = FALSE, labelsize = 5, repel = T)
+```
