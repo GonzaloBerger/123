@@ -1,0 +1,139 @@
+
+```{r}
+install.packages('cluster')
+library(cluster)
+```
+```{r}
+install.packages('factoextra')
+library(factoextra)
+```
+```{r}
+install.packages('dbscan')
+library(dbscan)
+```
+```{r}
+install.packages('fpc')
+library(fpc)
+```
+```{r}
+install.packages('htmltab')
+library(htmltab)
+```
+```{r}
+lkpage='https://www.cia.gov/library/publications/resources/the-world-factbook/fields/225.html'
+  lkpath='//*[@id="fieldListing"]'
+```
+```{r}
+lkpage2='https://www.cia.gov/library/publications/resources/the-world-factbook/fields/217.html'
+  lkpath2='//*[@id="fieldListing"]'
+```
+```{r}
+lkpage3='https://www.cia.gov/library/publications/resources/the-world-factbook/fields/257.html'
+  lkpath3='//*[@id="fieldListing"]'
+```
+```{r}
+install.packages('stringr')
+library(stringr)
+```
+```{r}
+taxes=htmltab(doc=lkpage,which = lkpath)
+industrial=htmltab(doc=lkpage2,which = lkpath2)
+electricity=htmltab(doc=lkpage3,which = lkpath3)
+```
+```{r}
+taxes[,c(2)]=replace(taxes[,c(2)], 
+                              taxes[,c(2)] == 'NA', NA)
+industrial[,c(2)]=replace(industrial[,c(2)], 
+                              industrial[,c(2)] == 'NA', NA)
+electricity[,c(2)]=replace(electricity[,c(2)], 
+                              electricity[,c(2)] == 'NA', NA)
+```
+```{r}
+taxesindustrial=merge(taxes,industrial,by.x = 'Country',by.y = 'Country')
+```
+```{r}
+data=merge(taxesindustrial,electricity)
+```
+```{r}
+data$`Taxes and other revenues`=str_split(data$`Taxes and other revenues`, pattern = '%', simplify = T)[,1]
+```
+```{r}
+data$`Industrial production growth rate`=str_split(data$`Industrial production growth rate`, pattern = '%', simplify = T)[,1]
+```
+```{r}
+data$`Electricity - from fossil fuels`=str_split(data$`Electricity - from fossil fuels`, pattern = '%', simplify = T)[,1]
+```
+```{r}
+set.seed(123)
+```
+```{r}
+row.names(data)=data$Country
+
+data=na.omit(data)
+```
+```{r}
+str(data)
+```
+```{r}
+data[,c(2:4)]=lapply(data[,c(2:4)],as.numeric)
+```
+```{r}
+g.dist=daisy(data[,c(2:4)],metric = 'gower')
+```
+```{r}
+res.pam=pam(g.dist,4,cluster.only=F)
+data$clusterPAM=res.pam$cluster
+```
+```{r}
+res.agnes=hcut(g.dist,k=4,hc_func='agnes',hc_method = 'ward.D')
+data$clusterAG=res.agnes$cluster
+```
+```{r}
+res.diana = hcut(g.dist,k=4,hc_func='diana')
+data$clusterDI=res.diana$cluster
+```
+
+# Pregunta 1
+
+```{r}
+fviz_nbclust(data[,c(2:4)], pam,diss=g.dist,method = 'gap_stat',k.max = 10,verbose = F)
+```
+# Respuesta: Habría sido óptimo establecer 3 clusters
+
+# Pregunta 2
+
+```{r}
+fviz_silhouette(res.pam)
+```
+```{r}
+fviz_silhouette(res.agnes)
+```
+```{r}
+fviz_silhouette(res.diana)
+```
+
+# Respuesta: la técnica divisiva clusterizó mejor
+
+# Pregunta 3
+
+```{r}
+inputData=data[,c(2:4)]
+```
+```{r}
+proyeccion = cmdscale(g.dist, k=2,add = T)
+```
+```{r}
+inputData$dim1 = proyeccion$points[,1]
+inputData$dim2 = proyeccion$points[,2]
+```
+```{r}
+g.dist.cmd = daisy(inputData[,c('dim1','dim2')], metric = 'euclidean')
+```
+```{r}
+db.cmd = dbscan(g.dist.cmd, eps=0.11, MinPts=3,method = 'dist')
+```
+```{r}
+db.cmd
+```
+# Respuesta: Se obtiene un solo cluster
+
