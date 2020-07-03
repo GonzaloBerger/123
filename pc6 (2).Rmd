@@ -1,0 +1,124 @@
+
+# EFA
+
+```{r}
+install.packages('polycor')
+library(polycor)
+```
+```{r}
+install.packages('ggcorrplot')
+library(ggcorrplot)
+```
+```{r}
+install.packages('psych')
+library(psych)
+```
+```{r}
+install.packages('matrixcalc')
+library(matrixcalc)
+```
+```{r}
+install.packages('GPArotation')
+library(GPArotation)
+```
+```{r}
+install.packages('rio')
+library(rio)
+```
+```{r}
+lk='https://github.com/GonzaloBerger/123/raw/master/Copia%20de%20Indicadores.xlsx'
+  lk2='https://github.com/GonzaloBerger/123/raw/master/TODOS%20LOS%20INDICADORES.xlsx'
+  lk3='https://github.com/GonzaloBerger/123/raw/master/data.xlsx'
+  lk4='https://github.com/GonzaloBerger/123/raw/master/Magallanes%20-%20Indicadores.xlsx'
+```
+```{r}
+data1=import(lk)
+data2=import(lk2)
+data3=import(lk3)
+data4=import(lk4)
+```
+```{r}
+data4[,-c(1:3,14,19,24)]=NULL
+```
+```{r}
+data3[,-c(1:3,9,14,19)]=NULL
+```
+```{r}
+data2[,-c(1:4,9,14)]=NULL
+```
+```{r}
+data1[,-c(1,4:7,25)]=NULL
+```
+```{r}
+data12=merge(data1,data2)
+```
+```{r}
+data123=merge(data12,data3)
+```
+```{r}
+data1234=merge(data123,data4)
+```
+```{r}
+str(data1234)
+```
+
+# Matriz de correlación
+
+```{r}
+dontselect=c("CODIGO","Departamento","Provincia","CODIGO...1","CODIGO FINAL","DEPARTAMENTO","PROVINCIA")
+
+select=setdiff(names(data1234),dontselect) 
+data=data1234[,select] 
+```
+```{r}
+corMatrix=polycor::hetcor(data)$correlations
+```
+```{r}
+ggcorrplot(corMatrix)
+```
+
+```{r}
+ggcorrplot(corMatrix,
+          p.mat = cor_pmat(corMatrix),
+          insig = "blank")
+```
+```{r}
+psych::KMO(corMatrix) 
+```
+
+```{r}
+cortest.bartlett(corMatrix,n=nrow(data))$p.value>0.05
+```
+```{r}
+is.singular.matrix(corMatrix)
+```
+```{r}
+fa.parallel(data,fm = 'ML', fa = 'fa')
+```
+
+```{r}
+resfa <- fa(data,nfactors = 3,cor = 'mixed',rotate = "varimax",fm="minres")
+```
+```{r}
+print(resfa$loadings,cutoff = 0.5)
+```
+```{r}
+fa.diagram(resfa)
+```
+
+# Respuesta 1: Sí
+
+# Respuesta 2: No, solo se aprueba la hipótesis 0 de una de las pruebas
+
+# Respuesta 3: propone 2 factores
+
+
+
+
+
+
+
+
+
+
+
