@@ -1,0 +1,115 @@
+
+```{r}
+library(lmtest)
+library(DescTools)
+library(stargazer)
+library(ggplot2)
+```
+# 1)
+```{r}
+library(rio)
+lkecono='https://github.com/GonzaloBerger/123/raw/master/Data%20EconoFreedom%20(3).xlsx'
+econo=import(lkecono)
+```
+```{r}
+library(htmltab)
+lkpagedemo='https://en.wikipedia.org/wiki/Democracy_Index'
+lkpathdemo='//*[@id="mw-content-text"]/div/table[2]'
+demo=htmltab(doc=lkpagedemo,which = lkpathdemo)
+```
+```{r}
+econo[,-c(2,7,8:9)]=NULL
+```
+```{r}
+demo[,-c(2:3)]=NULL
+```
+```{r}
+demo$`Country >> Country`=trimws(demo$`Country >> Country`,whitespace = "[\\h\\v]")
+```
+```{r}
+names(demo)=c('Country','Score')
+names(econo)=c('Country','PropertyRights','JudicalEffectiveness','GovernmentIntegrity')
+```
+# 2)
+```{r}
+data = merge(demo,econo,by.x = 'Country',by.y = 'Country')
+```
+```{r}
+data[,c(2:5)]=lapply(data[,c(2:5)],as.numeric)
+```
+```{r}
+table(data$Score, useNA = 'always')
+table(data$`Property Rights`, useNA = 'always')
+table(data$`Judical Effectiveness`, useNA = 'always')
+table(data$`Government Integrity`, useNA = 'always')
+```
+```{r}
+names(data)
+```
+# 3)
+```{r}
+modelo1=formula(Score~PropertyRights)
+modelo2=formula(Score ~ PropertyRights + JudicalEffectiveness)
+modelo3=formula(Score ~ PropertyRights + JudicalEffectiveness + GovernmentIntegrity)
+```
+```{r}
+reg1=lm(modelo1,data=data)
+stargazer(reg1,type='text',intercept.bottom = FALSE)
+```
+```{r}
+reg2=lm(modelo2,data=data)
+stargazer(reg2,type='text',intercept.bottom = FALSE)
+```
+```{r}
+reg3=lm(modelo3,data=data)
+stargazer(reg3,type='text',intercept.bottom = FALSE)
+```
+# 4)
+```{r}
+tanova=anova(reg1,reg2)
+stargazer(tanova,type='text',summary = F,title = 'ANOVA')
+```
+```{r}
+tanova=anova(reg1,reg2,reg3)
+stargazer(tanova,type='text',summary = F,title = 'ANOVA')
+```
+# Respuesta: EL mejor modelo es el segundo debido a que el en la tabla de análisis de varianza rechazamos la hipótesis nula (es decir, el modelo 1 y el modelo 2 sí difieren) debido a que el P es menor a 0.05
+# El modelo 2 es, además, mejor que el tercer modelo, ya que vemos en la tabla de análisis de varianza que al añadir la variable Government Integrity (modelo 3) el valor de P aumenta. Por último, notamos que las únicas variables significativas son Property Rights y Judical Effectivness. Estas dos variables tienen asteriscos.   
+
+# 5)
+
+```{r}
+plot(reg2,1)
+```
+
+```{r}
+bptest(reg2)
+```
+```{r}
+shapiro.test(reg2$residuals)
+```
+```{r}
+VIF(reg2)
+```
+# Respuesta: 
+
+# El modelo no pasa la prueba de linealidad, porque la línea no tiende a horizontal
+# El modelo no pasa la prueba de homocedasticidad, porque el P-Value es menor que 0.05
+# El modelo no pasa la prueba de normalidad de residuos, porque el P-Value es menor que 0.05
+# El modelo pasa la prueba de no multicolinealidad, porque los valores son menores que 5, lo que significa que las variables independientes no se relacionan entre sí 
+
+```{r}
+plot(reg2,5)
+```
+```{r}
+checkReg2=as.data.frame(influence.measures(reg2)$is.inf)
+checkReg2[checkReg2$cook.d | checkReg2$hat,]
+```
+# Respuesta: Hay un valor influyente que corresponde a la fila 29
+
+# Respuesta: Diría que el modelo2 no es válido, porque no pasa la mayoría de las pruebas. Los problemas del modelo son que el error en varianza no es uniforme, que la distribución de residuos no es normal y que no hay un patrón uniforme entre las variables independientes y la variable dependiente. 
+
+
+
+
+ 
